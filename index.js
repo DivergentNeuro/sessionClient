@@ -56,6 +56,9 @@ class EventTargetOnce extends EventTarget {
         };
         this.addEventListener(event, decoratedCallback);
     }
+    on(event, callback) {
+        this.addEventListener(event, (args) => callback(args.detail));
+    }
     emit(event, body) {
         this.dispatchEvent(new CustomEvent(event, { detail: body }));
     }
@@ -75,7 +78,7 @@ export class SessionClient {
         console.log("connected to sessionController");
         // API Gateway terminates ws connections after 10 minutes of inactivity
         // 9 minutes * 60s/min * 1000ms/s = 540000
-        this.keepalive = setInterval(() => this.ws.send("ping"), 540000);
+        this.keepalive = setInterval(() => this.ws.send("keepAlive"), 540000);
         this.events.emit("open");
     }
     onClose() {
@@ -90,6 +93,22 @@ export class SessionClient {
     }
     onError(err) {
         console.error(err);
+    }
+    closeConnection() {
+        clearInterval(this.keepalive);
+        this.ws.close();
+    }
+    setThresholdHandler(handler) {
+        this.events.on("thresholdUpdate", handler);
+    }
+    setCloseHandler(handler) {
+        this.events.on("close", handler);
+    }
+    setSignalHandler(signalName, handler) {
+        this.events.on(signalName, handler);
+    }
+    setStateUpdateHandler(handler) {
+        this.events.on("stateUpdate", handler);
     }
     async untilConnected() {
         return new Promise((resolve, reject) => {

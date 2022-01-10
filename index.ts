@@ -61,7 +61,7 @@ export interface FrequencyBand {
   highEnd: number;
 }
 
-type SignalName = "rawEEG" | "powerByBand" | "neurofeedback";
+export type SignalName = "rawEEG" | "powerByBand" | "neurofeedbackEvents";
 
 export const CrownRawEEGMetadata: RawEEGMetadata = {
   device: "Neurosity Crown",
@@ -125,6 +125,10 @@ class EventTargetOnce extends EventTarget {
     this.addEventListener(event, decoratedCallback);
   }
 
+  on(event: string, callback: (args: any) => void) {
+    this.addEventListener(event, (args: any) => callback(args.detail));
+  }
+
   emit(event: string, body?: any) {
     this.dispatchEvent(new CustomEvent(event, { detail: body }));
   }
@@ -153,7 +157,7 @@ export class SessionClient {
     console.log("connected to sessionController");
     // API Gateway terminates ws connections after 10 minutes of inactivity
     // 9 minutes * 60s/min * 1000ms/s = 540000
-    this.keepalive = setInterval(() => this.ws.send("ping"), 540000);
+    this.keepalive = setInterval(() => this.ws.send("keepAlive"), 540000);
 
     this.events.emit("open");
   }
@@ -173,6 +177,27 @@ export class SessionClient {
 
   private onError(err: Event) {
     console.error(err);
+  }
+
+  closeConnection() {
+    clearInterval(this.keepalive);
+    this.ws.close();
+  }
+
+  setThresholdHandler(handler: (args: any) => void){
+    this.events.on("thresholdUpdate", handler);
+  }
+
+  setCloseHandler(handler: (args: any) => void){
+    this.events.on("close", handler);
+  }
+
+  setSignalHandler(signalName: SignalName, handler: (args: any) => void){
+    this.events.on(signalName, handler);
+  }
+
+  setStateUpdateHandler(handler: (args: any) => void){
+    this.events.on("stateUpdate", handler);
   }
 
   async untilConnected(): Promise<void> {
