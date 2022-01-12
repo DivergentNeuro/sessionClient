@@ -141,12 +141,13 @@ export class SessionClient {
             this.events.once("joinSession-nack", reject);
         });
     }
-    async startSessionComponent(sessionComponentId, clientId, clientAge, clientSex, rawEEG, powerByBand, neurofeedback) {
+    async startSessionComponent(sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, rawEEG, powerByBand, neurofeedback) {
         const sessionComponentMetadata = {
             sessionComponentId,
             clientId,
             clientAge,
             clientSex,
+            sessionComponentName,
             signals: {
                 rawEEG,
                 powerByBand,

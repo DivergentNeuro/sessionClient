@@ -39,6 +39,7 @@ export interface SessionComponentMetadata {
   clientId: string;
   clientAge: number;
   clientSex: string;
+  sessionComponentName: string;
   signals: {
     rawEEG?: RawEEGMetadata;
     powerByBand?: PowerByBandMetadata;
@@ -243,6 +244,7 @@ export class SessionClient {
     clientId: string,
     clientAge: number,
     clientSex: string,
+    sessionComponentName: string,
     rawEEG?: RawEEGMetadata,
     powerByBand?: PowerByBandMetadata,
     neurofeedback?: NeurofeedbackMetadata
@@ -252,6 +254,7 @@ export class SessionClient {
       clientId,
       clientAge,
       clientSex,
+      sessionComponentName,
       signals: {
         rawEEG,
         powerByBand,
