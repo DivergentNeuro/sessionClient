@@ -3,37 +3,6 @@ interface Message {
   body: any;
 }
 
-export interface UnipolarMontage {
-  type: "unipolar";
-  reference: string;
-}
-
-export interface RawEEGMetadata {
-  device: string;
-  montage: UnipolarMontage;
-  ground: string;
-  prefiltering?: Filter[];
-  channels: string[];
-  samplingRate: number;
-}
-
-export interface PowerByBandMetadata {
-  device: string;
-  montage: UnipolarMontage;
-  ground: string;
-  prefiltering?: Filter[];
-  channels: string[];
-  frequencyBands: FrequencyBand[];
-}
-
-export interface NeurofeedbackMetadata {
-  modality: "auditory" | "visual" | "audiovisual";
-  formula: {
-    inputBands: FrequencyBand[];
-    equation: string;
-  };
-}
-
 export interface SessionComponentMetadata {
   sessionComponentId: string;
   clientId: string;
@@ -41,30 +10,16 @@ export interface SessionComponentMetadata {
   clientSex: string;
   sessionComponentName: string;
   signals: {
-    rawEEG?: RawEEGMetadata;
-    powerByBand?: PowerByBandMetadata;
-    neurofeedback?: NeurofeedbackMetadata;
+    rawEEG?: any;
+    powerTraining?: any;
   };
   startTime?: number; // written on startSessionComponent by controller
   endtime?: number; // written on endSessionComponent by controller
 }
 
-export interface Filter {
-  bandform: "highpass" | "lowpass" | "notch";
-  frequency: number;
-  characteristic: string;
-  order: number;
-}
+export type SignalName = "rawEEG" | "powerTraining";
 
-export interface FrequencyBand {
-  name: string;
-  lowEnd: number;
-  highEnd: number;
-}
-
-export type SignalName = "rawEEG" | "powerByBand" | "neurofeedbackEvents";
-
-export const CrownRawEEGMetadata: RawEEGMetadata = {
+export const CrownRawEEGMetadata = {
   device: "Neurosity Crown",
   montage: {
     type: "unipolar",
@@ -73,44 +28,6 @@ export const CrownRawEEGMetadata: RawEEGMetadata = {
   ground: "TP8",
   channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
   samplingRate: 256,
-};
-
-export const CrownPowerByBandMetadata: PowerByBandMetadata = {
-  device: "Neurosity Crown",
-  montage: {
-    type: "unipolar",
-    reference: "TP7",
-  },
-  ground: "TP8",
-  channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
-  prefiltering: [
-    {
-      bandform: "highpass",
-      frequency: 2,
-      characteristic: "butterworth",
-      order: 2,
-    },
-    {
-      bandform: "lowpass",
-      frequency: 45,
-      characteristic: "butterworth",
-      order: 2,
-    },
-    {
-      bandform: "notch",
-      // notch frequency may be 50 depending on location
-      frequency: 60,
-      characteristic: "butterworth",
-      order: 2,
-    },
-  ],
-  frequencyBands: [
-    { name: "delta", lowEnd: 1, highEnd: 3 },
-    { name: "theta", lowEnd: 4, highEnd: 7 },
-    { name: "alpha", lowEnd: 8, highEnd: 12 },
-    { name: "beta", lowEnd: 13, highEnd: 30 },
-    { name: "gamma", lowEnd: 30, highEnd: 100 },
-  ],
 };
 
 /**
@@ -152,6 +69,7 @@ export class SessionClient {
     );
     this.ws.addEventListener("error", (err: Event) => this.onError(err));
     this.keepalive = undefined;
+    this.events.on("signalPacket", (message) => this.onSignal(message));
   }
 
   private onOpen() {
@@ -178,6 +96,10 @@ export class SessionClient {
 
   private onError(err: Event) {
     console.error(err);
+  }
+
+  private onSignal(message: any) {
+    this.events.emit(message.signalName, message.packet)
   }
 
   closeConnection() {
@@ -245,9 +167,8 @@ export class SessionClient {
     clientAge: number,
     clientSex: string,
     sessionComponentName: string,
-    rawEEG?: RawEEGMetadata,
-    powerByBand?: PowerByBandMetadata,
-    neurofeedback?: NeurofeedbackMetadata
+    rawEEG?: any,
+    powerTraining?: any,
   ) {
     const sessionComponentMetadata: SessionComponentMetadata = {
       sessionComponentId,
@@ -257,8 +178,7 @@ export class SessionClient {
       sessionComponentName,
       signals: {
         rawEEG,
-        powerByBand,
-        neurofeedback,
+        powerTraining
       },
     };
     const startSessionComponentMessage = {

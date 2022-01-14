@@ -8,43 +8,6 @@ export const CrownRawEEGMetadata = {
     channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
     samplingRate: 256,
 };
-export const CrownPowerByBandMetadata = {
-    device: "Neurosity Crown",
-    montage: {
-        type: "unipolar",
-        reference: "TP7",
-    },
-    ground: "TP8",
-    channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
-    prefiltering: [
-        {
-            bandform: "highpass",
-            frequency: 2,
-            characteristic: "butterworth",
-            order: 2,
-        },
-        {
-            bandform: "lowpass",
-            frequency: 45,
-            characteristic: "butterworth",
-            order: 2,
-        },
-        {
-            bandform: "notch",
-            // notch frequency may be 50 depending on location
-            frequency: 60,
-            characteristic: "butterworth",
-            order: 2,
-        },
-    ],
-    frequencyBands: [
-        { name: "delta", lowEnd: 1, highEnd: 3 },
-        { name: "theta", lowEnd: 4, highEnd: 7 },
-        { name: "alpha", lowEnd: 8, highEnd: 12 },
-        { name: "beta", lowEnd: 13, highEnd: 30 },
-        { name: "gamma", lowEnd: 30, highEnd: 100 },
-    ],
-};
 /**
  * Sugary wrapper to make browser EventTarget more like NodeJS EventEmitter
  */
@@ -73,6 +36,7 @@ export class SessionClient {
         this.ws.addEventListener("message", (msg) => this.onMessage(msg));
         this.ws.addEventListener("error", (err) => this.onError(err));
         this.keepalive = undefined;
+        this.events.on("signalPacket", (message) => this.onSignal(message));
     }
     onOpen() {
         console.log("connected to sessionController");
@@ -93,6 +57,9 @@ export class SessionClient {
     }
     onError(err) {
         console.error(err);
+    }
+    onSignal(message) {
+        this.events.emit(message.signalName, message.packet);
     }
     closeConnection() {
         clearInterval(this.keepalive);
@@ -141,7 +108,7 @@ export class SessionClient {
             this.events.once("joinSession-nack", reject);
         });
     }
-    async startSessionComponent(sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, rawEEG, powerByBand, neurofeedback) {
+    async startSessionComponent(sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, rawEEG, powerTraining) {
         const sessionComponentMetadata = {
             sessionComponentId,
             clientId,
@@ -150,8 +117,7 @@ export class SessionClient {
             sessionComponentName,
             signals: {
                 rawEEG,
-                powerByBand,
-                neurofeedback,
+                powerTraining
             },
         };
         const startSessionComponentMessage = {
