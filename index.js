@@ -142,11 +142,12 @@ export class SessionClient {
             this.events.once("stopSessionComponent-nack", reject);
         });
     }
-    async setThreshold(sessionComponentId, clientId, threshold) {
+    async setThreshold(sessionComponentId, clientId, eventId, threshold) {
         const setThresholdMessage = {
             action: "setThreshold",
             sessionComponentId,
             clientId,
+            eventId,
             threshold,
         };
         this.ws.send(JSON.stringify(setThresholdMessage));

@@ -212,12 +212,14 @@ export class SessionClient {
   async setThreshold(
     sessionComponentId: string,
     clientId: string,
+    eventId: string,
     threshold: number
   ) {
     const setThresholdMessage = {
       action: "setThreshold",
       sessionComponentId,
       clientId,
+      eventId,
       threshold,
     };
 
