@@ -1,34 +1,9 @@
-interface Message {
+interface SessionControllerMessage {
   action: string;
   body: any;
 }
 
-export interface SessionComponentMetadata {
-  sessionComponentId: string;
-  clientId: string;
-  clientAge: number;
-  clientSex: string;
-  sessionComponentName: string;
-  signals: {
-    rawEEG?: any;
-    powerTraining?: any;
-  };
-  startTime?: number; // written on startSessionComponent by controller
-  endtime?: number; // written on endSessionComponent by controller
-}
-
 export type SignalName = "rawEEG" | "powerTraining";
-
-export const CrownRawEEGMetadata = {
-  device: "Neurosity Crown",
-  montage: {
-    type: "unipolar",
-    reference: "TP7",
-  },
-  ground: "TP8",
-  channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
-  samplingRate: 256,
-};
 
 /**
  * Sugary wrapper to make browser EventTarget more like NodeJS EventEmitter
@@ -90,7 +65,7 @@ export class SessionClient {
 
   private onMessage(msg: MessageEvent) {
     console.log(msg);
-    let message: Message = JSON.parse(msg.data);
+    let message: SessionControllerMessage = JSON.parse(msg.data);
     this.events.emit(message.action, message.body);
   }
 
@@ -99,7 +74,7 @@ export class SessionClient {
   }
 
   private onSignal(message: any) {
-    this.events.emit(message.signalName, message.packet)
+    this.events.emit(message.signalName, message.packet);
   }
 
   closeConnection() {
@@ -107,19 +82,25 @@ export class SessionClient {
     this.ws.close();
   }
 
-  setThresholdHandler(handler: (args: any) => void){
+  setThresholdHandler({ handler }: { handler: (args: any) => void }) {
     this.events.on("thresholdUpdate", handler);
   }
 
-  setCloseHandler(handler: (args: any) => void){
+  setCloseHandler({ handler }: { handler: (args: any) => void }) {
     this.events.on("close", handler);
   }
 
-  setSignalHandler(signalName: SignalName, handler: (args: any) => void){
+  setSignalHandler({
+    signalName,
+    handler,
+  }: {
+    signalName: SignalName;
+    handler: (args: any) => void;
+  }) {
     this.events.on(signalName, handler);
   }
 
-  setStateUpdateHandler(handler: (args: any) => void){
+  setStateUpdateHandler({ handler }: { handler: (args: any) => void }) {
     this.events.on("stateUpdate", handler);
   }
 
@@ -142,11 +123,15 @@ export class SessionClient {
     });
   }
 
-  async joinSession(
-    clientId: string,
-    subscribeSignals: SignalName[] = [],
-    isRequiredConnection = false
-  ) {
+  async joinSession({
+    clientId,
+    subscribeSignals = [],
+    isRequiredConnection = false,
+  }: {
+    clientId: string;
+    subscribeSignals: SignalName[];
+    isRequiredConnection: boolean;
+  }) {
     const joinSessionMessage = {
       action: "joinSession",
       clientId,
@@ -161,29 +146,32 @@ export class SessionClient {
     });
   }
 
-  async startSessionComponent(
-    sessionComponentId: string,
-    clientId: string,
-    clientAge: number,
-    clientSex: string,
-    sessionComponentName: string,
-    rawEEG?: any,
-    powerTraining?: any,
-  ) {
-    const sessionComponentMetadata: SessionComponentMetadata = {
+  async startSessionComponent({
+    sessionComponentId,
+    clientId,
+    clientAge,
+    clientSex,
+    sessionComponentName,
+    signals = {},
+  }: {
+    sessionComponentId: string;
+    clientId: string;
+    clientAge: number;
+    clientSex: string;
+    sessionComponentName: string;
+    signals: {
+      rawEEG?: any;
+      powerTraining?: any;
+    };
+  }) {
+    const startSessionComponentMessage = {
+      action: "startSessionComponent",
       sessionComponentId,
       clientId,
       clientAge,
       clientSex,
       sessionComponentName,
-      signals: {
-        rawEEG,
-        powerTraining
-      },
-    };
-    const startSessionComponentMessage = {
-      action: "startSessionComponent",
-      ...sessionComponentMetadata,
+      signals,
     };
 
     this.ws.send(JSON.stringify(startSessionComponentMessage));
@@ -209,12 +197,17 @@ export class SessionClient {
     });
   }
 
-  async setThreshold(
-    sessionComponentId: string,
-    clientId: string,
-    eventId: string,
-    threshold: number
-  ) {
+  async setThreshold({
+    sessionComponentId,
+    clientId,
+    eventId,
+    threshold,
+  }: {
+    sessionComponentId: string;
+    clientId: string;
+    eventId: string;
+    threshold: number;
+  }) {
     const setThresholdMessage = {
       action: "setThreshold",
       sessionComponentId,
@@ -231,12 +224,17 @@ export class SessionClient {
     });
   }
 
-  async forwardSignal(
-    clientId: string,
-    sessionComponentId: string,
-    signalName: SignalName,
-    signalPacket: any
-  ) {
+  async sendSignal({
+    clientId,
+    sessionComponentId,
+    signalName,
+    signalPacket,
+  }: {
+    clientId: string;
+    sessionComponentId: string;
+    signalName: SignalName;
+    signalPacket: any;
+  }) {
     const signalPacketMessage = {
       action: "sendSignal",
       clientId,

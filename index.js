@@ -1,13 +1,3 @@
-export const CrownRawEEGMetadata = {
-    device: "Neurosity Crown",
-    montage: {
-        type: "unipolar",
-        reference: "TP7",
-    },
-    ground: "TP8",
-    channels: ["CP3", "C3", "F5", "PO3", "PO4", "F6", "C4", "CP4"],
-    samplingRate: 256,
-};
 /**
  * Sugary wrapper to make browser EventTarget more like NodeJS EventEmitter
  */
@@ -65,16 +55,16 @@ export class SessionClient {
         clearInterval(this.keepalive);
         this.ws.close();
     }
-    setThresholdHandler(handler) {
+    setThresholdHandler({ handler }) {
         this.events.on("thresholdUpdate", handler);
     }
-    setCloseHandler(handler) {
+    setCloseHandler({ handler }) {
         this.events.on("close", handler);
     }
-    setSignalHandler(signalName, handler) {
+    setSignalHandler({ signalName, handler, }) {
         this.events.on(signalName, handler);
     }
-    setStateUpdateHandler(handler) {
+    setStateUpdateHandler({ handler }) {
         this.events.on("stateUpdate", handler);
     }
     async untilConnected() {
@@ -95,7 +85,7 @@ export class SessionClient {
             }
         });
     }
-    async joinSession(clientId, subscribeSignals = [], isRequiredConnection = false) {
+    async joinSession({ clientId, subscribeSignals = [], isRequiredConnection = false, }) {
         const joinSessionMessage = {
             action: "joinSession",
             clientId,
@@ -108,21 +98,15 @@ export class SessionClient {
             this.events.once("joinSession-nack", reject);
         });
     }
-    async startSessionComponent(sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, rawEEG, powerTraining) {
-        const sessionComponentMetadata = {
+    async startSessionComponent({ sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, signals = {}, }) {
+        const startSessionComponentMessage = {
+            action: "startSessionComponent",
             sessionComponentId,
             clientId,
             clientAge,
             clientSex,
             sessionComponentName,
-            signals: {
-                rawEEG,
-                powerTraining
-            },
-        };
-        const startSessionComponentMessage = {
-            action: "startSessionComponent",
-            ...sessionComponentMetadata,
+            signals,
         };
         this.ws.send(JSON.stringify(startSessionComponentMessage));
         return new Promise((resolve, reject) => {
@@ -142,7 +126,7 @@ export class SessionClient {
             this.events.once("stopSessionComponent-nack", reject);
         });
     }
-    async setThreshold(sessionComponentId, clientId, eventId, threshold) {
+    async setThreshold({ sessionComponentId, clientId, eventId, threshold, }) {
         const setThresholdMessage = {
             action: "setThreshold",
             sessionComponentId,
@@ -156,7 +140,7 @@ export class SessionClient {
             this.events.once("setThreshold-nack", reject);
         });
     }
-    async forwardSignal(clientId, sessionComponentId, signalName, signalPacket) {
+    async sendSignal({ clientId, sessionComponentId, signalName, signalPacket, }) {
         const signalPacketMessage = {
             action: "sendSignal",
             clientId,
