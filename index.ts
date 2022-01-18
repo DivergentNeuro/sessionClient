@@ -1,3 +1,5 @@
+import * as EventEmitter from "eventemitter3";
+
 interface SessionControllerMessage {
   action: string;
   body: any;
@@ -5,37 +7,15 @@ interface SessionControllerMessage {
 
 export type SignalName = "rawEEG" | "powerTraining";
 
-/**
- * Sugary wrapper to make browser EventTarget more like NodeJS EventEmitter
- */
-class EventTargetOnce extends EventTarget {
-  once(event: string, callback: (args: any) => void) {
-    const decoratedCallback = (args: any) => {
-      this.removeEventListener(event, decoratedCallback);
-      callback(args.detail);
-    };
-
-    this.addEventListener(event, decoratedCallback);
-  }
-
-  on(event: string, callback: (args: any) => void) {
-    this.addEventListener(event, (args: any) => callback(args.detail));
-  }
-
-  emit(event: string, body?: any) {
-    this.dispatchEvent(new CustomEvent(event, { detail: body }));
-  }
-}
-
 export class SessionClient {
   readonly controllerURL: string;
   readonly ws: WebSocket;
-  readonly events: EventTargetOnce;
+  readonly events: EventEmitter;
   keepalive: number | undefined;
 
   constructor(controllerURL: string) {
     this.controllerURL = controllerURL;
-    this.events = new EventTargetOnce();
+    this.events = new EventEmitter();
     this.ws = new WebSocket(controllerURL);
     this.ws.addEventListener("open", () => this.onOpen());
     this.ws.addEventListener("close", () => this.onClose());

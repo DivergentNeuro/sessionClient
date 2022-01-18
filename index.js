@@ -1,25 +1,8 @@
-/**
- * Sugary wrapper to make browser EventTarget more like NodeJS EventEmitter
- */
-class EventTargetOnce extends EventTarget {
-    once(event, callback) {
-        const decoratedCallback = (args) => {
-            this.removeEventListener(event, decoratedCallback);
-            callback(args.detail);
-        };
-        this.addEventListener(event, decoratedCallback);
-    }
-    on(event, callback) {
-        this.addEventListener(event, (args) => callback(args.detail));
-    }
-    emit(event, body) {
-        this.dispatchEvent(new CustomEvent(event, { detail: body }));
-    }
-}
+import * as EventEmitter from "eventemitter3";
 export class SessionClient {
     constructor(controllerURL) {
         this.controllerURL = controllerURL;
-        this.events = new EventTargetOnce();
+        this.events = new EventEmitter();
         this.ws = new WebSocket(controllerURL);
         this.ws.addEventListener("open", () => this.onOpen());
         this.ws.addEventListener("close", () => this.onClose());
