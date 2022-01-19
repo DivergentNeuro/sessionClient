@@ -1,4 +1,4 @@
-import * as EventEmitter from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 
 interface SessionControllerMessage {
   action: string;
@@ -10,7 +10,8 @@ export type SignalName = "rawEEG" | "powerTraining";
 export class SessionClient {
   readonly controllerURL: string;
   readonly ws: WebSocket;
-  readonly events: EventEmitter;
+  // Changed events type to any because needed named import for mobile, fix this later
+  readonly events: any;
   keepalive: number | undefined;
 
   constructor(controllerURL: string) {
@@ -24,7 +25,7 @@ export class SessionClient {
     );
     this.ws.addEventListener("error", (err: Event) => this.onError(err));
     this.keepalive = undefined;
-    this.events.on("signalPacket", (message) => this.onSignal(message));
+    this.events.on("signalPacket", (message: any) => this.onSignal(message));
   }
 
   private onOpen() {
