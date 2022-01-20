@@ -5,7 +5,7 @@ interface SessionControllerMessage {
   body: any;
 }
 
-export type SignalName = "rawEEG" | "powerTraining";
+export type SignalType = "rawEEG" | "powerTraining";
 
 export class SessionClient {
   readonly controllerURL: string;
@@ -55,7 +55,7 @@ export class SessionClient {
   }
 
   private onSignal(message: any) {
-    this.events.emit(message.signalName, message.packet);
+    this.events.emit(message.signalType, message.packet);
   }
 
   closeConnection() {
@@ -72,13 +72,13 @@ export class SessionClient {
   }
 
   setSignalHandler({
-    signalName,
+    signalType,
     handler,
   }: {
-    signalName: SignalName;
+    signalType: SignalType;
     handler: (args: any) => void;
   }) {
-    this.events.on(signalName, handler);
+    this.events.on(signalType, handler);
   }
 
   setStateUpdateHandler({ handler }: { handler: (args: any) => void }) {
@@ -110,7 +110,7 @@ export class SessionClient {
     isRequiredConnection = false,
   }: {
     clientId: string;
-    subscribeSignals: SignalName[];
+    subscribeSignals: SignalType[];
     isRequiredConnection: boolean;
   }) {
     const joinSessionMessage = {
@@ -208,19 +208,19 @@ export class SessionClient {
   async sendSignal({
     clientId,
     sessionComponentId,
-    signalName,
+    signalType,
     signalPacket,
   }: {
     clientId: string;
     sessionComponentId: string;
-    signalName: SignalName;
+    signalType: SignalType;
     signalPacket: any;
   }) {
     const signalPacketMessage = {
       action: "sendSignal",
       clientId,
       sessionComponentId,
-      signalName,
+      signalType,
       signalPacket,
     };
     this.ws.send(JSON.stringify(signalPacketMessage));
