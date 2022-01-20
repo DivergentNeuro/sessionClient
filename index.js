@@ -32,7 +32,7 @@ export class SessionClient {
         console.error(err);
     }
     onSignal(message) {
-        this.events.emit(message.signalName, message.packet);
+        this.events.emit(message.signalType, message.packet);
     }
     closeConnection() {
         clearInterval(this.keepalive);
@@ -44,8 +44,8 @@ export class SessionClient {
     setCloseHandler({ handler }) {
         this.events.on("close", handler);
     }
-    setSignalHandler({ signalName, handler, }) {
-        this.events.on(signalName, handler);
+    setSignalHandler({ signalType, handler, }) {
+        this.events.on(signalType, handler);
     }
     setStateUpdateHandler({ handler }) {
         this.events.on("stateUpdate", handler);
@@ -123,12 +123,12 @@ export class SessionClient {
             this.events.once("setThreshold-nack", reject);
         });
     }
-    async sendSignal({ clientId, sessionComponentId, signalName, signalPacket, }) {
+    async sendSignal({ clientId, sessionComponentId, signalType, signalPacket, }) {
         const signalPacketMessage = {
             action: "sendSignal",
             clientId,
             sessionComponentId,
-            signalName,
+            signalType,
             signalPacket,
         };
         this.ws.send(JSON.stringify(signalPacketMessage));
