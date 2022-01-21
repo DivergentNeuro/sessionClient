@@ -1,9 +1,9 @@
 import { EventEmitter } from "eventemitter3";
 export class SessionClient {
-    constructor(controllerURL) {
+    constructor({ controllerURL, authToken, }) {
         this.controllerURL = controllerURL;
         this.events = new EventEmitter();
-        this.ws = new WebSocket(controllerURL);
+        this.ws = new WebSocket(controllerURL, authToken);
         this.ws.addEventListener("open", () => this.onOpen());
         this.ws.addEventListener("close", () => this.onClose());
         this.ws.addEventListener("message", (msg) => this.onMessage(msg));

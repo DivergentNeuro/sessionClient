@@ -14,10 +14,16 @@ export class SessionClient {
   readonly events: any;
   keepalive: number | undefined;
 
-  constructor(controllerURL: string) {
+  constructor({
+    controllerURL,
+    authToken,
+  }: {
+    controllerURL: string;
+    authToken: string;
+  }) {
     this.controllerURL = controllerURL;
     this.events = new EventEmitter();
-    this.ws = new WebSocket(controllerURL);
+    this.ws = new WebSocket(controllerURL, authToken);
     this.ws.addEventListener("open", () => this.onOpen());
     this.ws.addEventListener("close", () => this.onClose());
     this.ws.addEventListener("message", (msg: MessageEvent) =>
