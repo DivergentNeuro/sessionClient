@@ -35,7 +35,6 @@ export class SessionClient {
   }
 
   private onOpen() {
-    console.log("connected to sessionController");
     // API Gateway terminates ws connections after 10 minutes of inactivity
     // 9 minutes * 60s/min * 1000ms/s = 540000
     this.keepalive = setInterval(() => this.ws.send("keepAlive"), 540000);
@@ -44,14 +43,12 @@ export class SessionClient {
   }
 
   private onClose() {
-    console.log("websocket connection closed");
     clearInterval(this.keepalive);
 
     this.events.emit("close");
   }
 
   private onMessage(msg: MessageEvent) {
-    console.log(msg);
     let message: SessionControllerMessage = JSON.parse(msg.data);
     this.events.emit(message.action, message.body);
   }
