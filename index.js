@@ -78,7 +78,7 @@ export class SessionClient {
             this.events.once("joinSession-nack", reject);
         });
     }
-    async startSessionComponent({ sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, signals = {}, }) {
+    async startSessionComponent({ sessionComponentId, clientId, clientAge, clientSex, sessionComponentName, sessionComponentType, signals = {}, }) {
         const startSessionComponentMessage = {
             action: "startSessionComponent",
             sessionComponentId,
@@ -86,6 +86,7 @@ export class SessionClient {
             clientAge,
             clientSex,
             sessionComponentName,
+            sessionComponentType,
             signals,
         };
         this.ws.send(JSON.stringify(startSessionComponentMessage));

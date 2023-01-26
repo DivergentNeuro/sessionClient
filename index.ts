@@ -136,6 +136,7 @@ export class SessionClient {
     clientAge,
     clientSex,
     sessionComponentName,
+    sessionComponentType,
     signals = {},
   }: {
     sessionComponentId: string;
@@ -143,6 +144,7 @@ export class SessionClient {
     clientAge: number;
     clientSex: string;
     sessionComponentName: string;
+    sessionComponentType: string;
     signals: {
       rawEEG?: any;
       powerTraining?: any;
@@ -155,6 +157,7 @@ export class SessionClient {
       clientAge,
       clientSex,
       sessionComponentName,
+      sessionComponentType,
       signals,
     };
 
